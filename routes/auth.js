@@ -1,23 +1,21 @@
 const express = require("express");
 const router = express.Router();
 
+const { runValidation } = require("../validators/index");
 const {
   userRegisterValidator,
-  userSigninValidator,
+  userLoginValidator,
 } = require("../validators/auth");
-const { runValidation } = require("../validators/index");
-const { register, signin, signout } = require("../controllers/auth");
-const { requireSignin, isAuth, isAdmin } = require("../middleware/auth");
+const {
+  register,
+  registerActivate,
+  login,
+  logout,
+} = require("../controllers/auth");
 
 router.post("/register", userRegisterValidator, runValidation, register);
-router.post("/signin", userSigninValidator, runValidation, signin);
-router.get("/signout", signout);
-
-// test
-router.get("/secret", requireSignin, isAuth, isAdmin, (req, res) => {
-  res.json({
-    user: req.user,
-  });
-});
+router.post("/register/activate", registerActivate);
+router.post("/login", userLoginValidator, runValidation, login);
+router.get("/logout", logout);
 
 module.exports = router;
