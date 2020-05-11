@@ -23,6 +23,7 @@
     "lodash": "^4.17.15",
     "mongoose": "^5.9.10",
     "shortid": "^2.2.15",
+    "slugify": "^1.4.0",
     "uuid": "^7.0.3"
   },
   "devDependencies": {
