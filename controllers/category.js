@@ -1,6 +1,7 @@
 const slugify = require("slugify");
 
 const Category = require("../models/category");
+const Link = require("../models/link");
 const { setS3Params, s3UploadImage } = require("../aws/s3");
 const { getFormData } = require("../formidable/index");
 
@@ -119,8 +120,33 @@ exports.list = async (req, res) => {
   }
 };
 
-exports.read = (req, res) => {
-  res.send("read");
+exports.read = async (req, res) => {
+  const limit = +(req.query && req.query.limit) || 10;
+  const skip = +(req.query && req.query.skip) || 0;
+
+  try {
+    //find category
+    const category = await Category.findOne({ slug: req.params.slug }).populate(
+      "postedBy",
+      "_id name username"
+    );
+    if (!category) {
+      res.status(400).json({ error: "Category not found" });
+    }
+
+    //find all links associated with this category
+    const links = await Link.find({ categories: category })
+      .populate("postedBy", "_id name username")
+      .populate("categories", "name")
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(skip);
+
+    // res.json({ size: links.length });
+    res.json({ category, links });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 };
 
 exports.update = (req, res) => {
