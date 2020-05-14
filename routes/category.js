@@ -34,7 +34,6 @@ router.get("/categories", list);
 
 router.get("/category/:slug", read);
 
-// router.put('/category/:slug', categoryUpdateValidator, runValidation, requireSignin, isAdmin, create);
 router.put(
   "/category/:slug",
   categoryUpdateValidator,

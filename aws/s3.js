@@ -51,3 +51,15 @@ exports.s3UploadImage = async (params) => {
     throw error;
   }
 };
+
+//S3 deleteObject
+exports.s3DeleteObject = async (deleteParams) => {
+  try {
+    const data = await s3.deleteObject(deleteParams).promise();
+    // console.log("S3 DELETED", data); // deleted
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};

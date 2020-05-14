@@ -2,28 +2,8 @@ const slugify = require("slugify");
 
 const Category = require("../models/category");
 const Link = require("../models/link");
-const { setS3Params, s3UploadImage } = require("../aws/s3");
-const { getFormData } = require("../formidable/index");
-
-//#region
-/* */
-
-/**
- * arn:aws:iam::108419398690:user/Yvonne
- * 
- * //   const { name, image, content } = req.body;
-
-  //create a slug based on the name eg: slugify(node js, '-') => node-js
-  //   const slug = slugify(name);
-
-  //test image --using placeholder.com img-url
-  //   const image_test = {
-  //     url: `https://via.placeholder.com/200x150.png?text=${process.env.CLIENT_URL}`,
-  //     key: "123",
-  //   };
-
- */
-//#endregion
+const { setS3Params, s3UploadImage, s3DeleteObject } = require("../aws/s3");
+// const { getFormData } = require("../formidable/index");
 
 //create example --get formData using formidable --then send image to AWS S3
 //#region
@@ -149,10 +129,83 @@ exports.read = async (req, res) => {
   }
 };
 
-exports.update = (req, res) => {
-  res.send("update");
+exports.update = async (req, res) => {
+  const { slug } = req.params;
+  const { name, content, image } = req.body;
+
+  try {
+    //find Category
+    const category = await Category.findOne({ slug });
+
+    if (!category) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    //update fields
+    category.name = name;
+    category.content = content;
+    category.slug = slugify(name);
+
+    //check if image is updated
+    if (image) {
+      //image data --base64
+      const base64Data = new Buffer.from(
+        image.replace(/^data:image\/\w+;base64,/, ""),
+        "base64"
+      );
+      const imageType = image.split(";")[0].split("/")[1];
+
+      // remove the existing image from s3 before uploading new/update
+      const deleteParams = {
+        Bucket: "yvonnkr-awsbucket1",
+        Key: `${category.image.key}`,
+      };
+
+      await s3DeleteObject(deleteParams);
+
+      //upload updated image to AWS S3
+      const params = setS3Params(base64Data, imageType);
+      const data = await s3UploadImage(params);
+
+      //update image
+      category.image.url = data.Location;
+      category.image.key = data.Key;
+    }
+
+    //save
+    await category.save();
+
+    //response
+    res.status(201).json(category);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 };
 
-exports.remove = (req, res) => {
-  res.send("remove");
+exports.remove = async (req, res) => {
+  const { slug } = req.params;
+
+  try {
+    const category = await Category.findOne({ slug });
+    if (!category) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    //delete image from aws
+    const deleteParams = {
+      Bucket: "yvonnkr-awsbucket1",
+      Key: `${category.image.key}`,
+    };
+
+    await s3DeleteObject(deleteParams);
+
+    //remove from db
+    await category.remove();
+
+    res.json({
+      message: "Category deleted successfully",
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 };
