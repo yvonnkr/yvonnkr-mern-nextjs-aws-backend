@@ -63,7 +63,7 @@ exports.forgotPasswordEmailParams = (email, token) => {
     Destination: {
       ToAddresses: [email],
     },
-    ReplyToAddresses: [process.env.EMAIL_FROM], //TODO: maybe Email_from instead? to confirm
+    ReplyToAddresses: [process.env.EMAIL_FROM],
     Message: {
       Body: {
         Html: {

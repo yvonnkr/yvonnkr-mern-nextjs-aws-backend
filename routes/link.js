@@ -35,16 +35,16 @@ router.get("/links", list);
 
 router.put("/click-count", clickCount);
 
-router.get("/link/:slug", read);
+router.get("/link/:id", read);
 
 router.put(
-  "/link/:slug",
+  "/link/:id",
   linkUpdateValidator,
   runValidation,
   requireSignin,
   isAuth,
-  create
+  update
 );
-router.delete("/link/:slug", requireSignin, isAuth, remove);
+router.delete("/link/:id", requireSignin, isAuth, remove);
 
 module.exports = router;
