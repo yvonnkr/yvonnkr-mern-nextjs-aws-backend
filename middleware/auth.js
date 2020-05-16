@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const expressJwt = require("express-jwt");
 const User = require("../models/user");
+const Link = require("../models/link");
 
 //option 1: using expressJwt  --for ref purposes
 exports.requireSignin_expressJwt = expressJwt({
@@ -82,6 +83,31 @@ exports.isAdmin = async (req, res, next) => {
     }
 
     req.profile = user;
+    next();
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+};
+
+exports.canUpdateDeleteLink = async (req, res, next) => {
+  const linkId = req.params.id;
+  const userId = req.user._id;
+
+  try {
+    const link = await Link.findById(linkId);
+
+    if (!link) {
+      return res.status(404).json({ error: "Link not found." });
+    }
+
+    const userIsLinkCreator = link.postedBy.toString() === userId.toString();
+
+    if (!userIsLinkCreator) {
+      return res.status(400).json({
+        error: "Forbidden, User cannot update/delete other user's link",
+      });
+    }
+
     next();
   } catch (error) {
     res.status(500).json({ error });

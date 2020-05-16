@@ -9,7 +9,12 @@ const {
 const { runValidation } = require("../validators/index");
 
 //middleware
-const { requireSignin, isAuth } = require("../middleware/auth");
+const {
+  requireSignin,
+  isAuth,
+  isAdmin,
+  canUpdateDeleteLink,
+} = require("../middleware/auth");
 
 // controllers
 const {
@@ -31,20 +36,37 @@ router.post(
   create
 );
 
-router.get("/links", list);
+router.get("/links", requireSignin, isAdmin, list);
 
 router.put("/click-count", clickCount);
 
 router.get("/link/:id", read);
 
+//@user can update their own link only
 router.put(
   "/link/:id",
   linkUpdateValidator,
   runValidation,
   requireSignin,
   isAuth,
+  canUpdateDeleteLink,
   update
 );
-router.delete("/link/:id", requireSignin, isAuth, remove);
+
+//@admin only can update any link
+router.put(
+  "/link/admin/:id",
+  linkUpdateValidator,
+  runValidation,
+  requireSignin,
+  isAdmin,
+  update
+);
+
+//@user can delete their own link only
+router.delete("/link/:id", requireSignin, isAuth, canUpdateDeleteLink, remove);
+
+//@admin only can delete any link
+router.delete("/link/admin/:id", requireSignin, isAdmin, remove);
 
 module.exports = router;

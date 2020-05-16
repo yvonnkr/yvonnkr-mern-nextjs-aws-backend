@@ -24,8 +24,17 @@ exports.create = async (req, res) => {
 };
 
 exports.list = async (req, res) => {
+  const limit = +req.query.limit || 10;
+  const skip = +req.query.skip || 0;
+
   try {
-    const links = await Link.find();
+    const links = await Link.find()
+      .populate("postedBy", "name")
+      .populate("categories", "name slug")
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(skip);
+
     res.json(links);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -64,7 +73,7 @@ exports.update = async (req, res) => {
 
     const data = await selectedLink.save();
 
-    res.status(201).json(data);
+    res.status(200).json(data);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
