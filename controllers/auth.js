@@ -11,7 +11,7 @@ const {
 } = require("../aws/email");
 
 exports.register = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, categories } = req.body;
 
   try {
     //check if user exists already
@@ -22,7 +22,7 @@ exports.register = async (req, res) => {
 
     //generate- account activation token with {name,email,password}
     const token = jwt.sign(
-      { name, email, password },
+      { name, email, password, categories },
       process.env.JWT_ACCOUNT_ACTIVATION,
       {
         expiresIn: "2d",
@@ -54,7 +54,7 @@ exports.registerActivate = async (req, res) => {
         .json({ error: "Invalid token, activation failed" });
     }
 
-    const { name, email, password } = decodedToken;
+    const { name, email, password, categories } = decodedToken;
 
     const user = await User.findOne({ email });
     if (user) {
@@ -66,6 +66,7 @@ exports.registerActivate = async (req, res) => {
       name,
       email,
       password,
+      categories,
     });
 
     await newUser.save();

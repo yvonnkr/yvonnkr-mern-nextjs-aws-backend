@@ -1,4 +1,11 @@
 const Link = require("../models/link");
+const User = require("../models/user");
+const Category = require("../models/category");
+
+const {
+  linkPublishedParams,
+  sendEmailOnlinkPublished,
+} = require("../aws/email");
 
 exports.create = async (req, res) => {
   const { title, url, categories, type, medium } = req.body;
@@ -15,8 +22,22 @@ exports.create = async (req, res) => {
   });
 
   try {
+    //save to db
     const data = await newLink.save();
 
+    //then find all users in the link category and send email to alert them of this new link submition
+    const allUsers = await User.find({ categories: { $in: categories } });
+    const allCategories = await Category.find({ _id: { $in: categories } });
+
+    data.categories = allCategories;
+
+    //aws ses
+    for (let i = 0; i < allUsers.length; i++) {
+      const params = linkPublishedParams(allUsers[i].email, data);
+      await sendEmailOnlinkPublished(params);
+    }
+
+    //response
     res.status(201).json(data);
   } catch (error) {
     res.status(400).json({ error: error.message });

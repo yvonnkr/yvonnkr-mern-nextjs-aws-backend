@@ -93,6 +93,71 @@ exports.sendEmailOnforgotPassword = async (params) => {
   }
 };
 
+// *****************SEND EMAIL TO USERS ON LINK PUBLISHED (BASED ON CATEGORY) ****************************************
+//PARAMS
+exports.linkPublishedParams = (email, data) => {
+  const params = {
+    Source: process.env.EMAIL_FROM,
+    Destination: {
+      ToAddresses: [email],
+    },
+    ReplyToAddresses: [process.env.EMAIL_FROM],
+    Message: {
+      Body: {
+        Html: {
+          Charset: "UTF-8",
+          Data: `
+                <html>
+                  <h1>New link published | ${process.env.CLIENT_URL} </h1>
+                  <p>A new link titled <b>${
+                    data.title
+                  }</b> has just been published in the following categories</p>
+
+                  ${data.categories
+                    .map((c) => {
+                      return `
+                      <div>
+                        <h2>${c.name}</h2>
+                        <img src="${c.image.url}" alt="${c.name}" style="height:50px;" />
+                        <h3>
+                          <a href="${process.env.CLIENT_URL}/links/${c.slug}" >Check it out!</a>
+                        </h3>
+                      </div>
+                    `;
+                    })
+                    .join("-----------------")}
+
+                  <br />
+
+                  <p>Do not wish to receive notifications?</p>
+                  <p>Turn off notifications by going to your <b>Dashboard</b> > Update Profile and Uncheck the categories </p>
+                  <p>
+                    <a href="${
+                      process.env.CLIENT_URL
+                    }/user/profile/update" >Go to your Dashboard</a>
+                  </p>
+
+                </html>`,
+        },
+      },
+      Subject: {
+        Charset: "UTF-8",
+        Data: "New link published",
+      },
+    },
+  };
+
+  return params;
+};
+//SEND-EMAIL-ON-LINK-CREATE
+exports.sendEmailOnlinkPublished = async (params) => {
+  try {
+    await ses.sendEmail(params).promise();
+  } catch (error) {
+    throw new Error("We could not verify your email, Please try again.");
+  }
+};
+
 //#region using then()catch()
 // sendEmailOnRegister
 //   .then((data) => {
