@@ -25,3 +25,31 @@ exports.getProfile = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+exports.updateProfile = async (req, res) => {
+  const userId = req.user._id;
+  const { name, password, categories } = req.body;
+
+  //if password validate
+  switch (true) {
+    case password && password.length < 6:
+      return res
+        .status(422)
+        .json({ error: "Password must be atleast 6 characters long" });
+  }
+
+  try {
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: userId },
+      { name, password, categories },
+      { new: true }
+    );
+
+    updatedUser.salt = undefined;
+    updatedUser.hashed_password = undefined;
+
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
