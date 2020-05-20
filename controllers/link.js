@@ -135,3 +135,39 @@ exports.clickCount = async (req, res) => {
   //alternative way
   // await Link.findByIdAndUpdate(linkId, {$inc: {clicks: 1}}, {new: true})
 };
+
+exports.getPopularLinks = async (req, res) => {
+  try {
+    const links = await Link.find()
+      .populate("postedBy", "name")
+      .populate("categories", "name")
+      .sort({ clicks: -1 })
+      .limit(3);
+
+    res.json(links);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+exports.getPopularLinksInCategory = async (req, res) => {
+  const categorySlug = req.params.category;
+
+  try {
+    //find category based on query params
+    const category = await Category.findOne({ slug: categorySlug });
+    if (!category) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    const links = await Link.find({ categories: category })
+      .populate("postedBy", "name")
+      .populate("categories", "name")
+      .sort({ clicks: -1 })
+      .limit(3);
+
+    res.json(links);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};

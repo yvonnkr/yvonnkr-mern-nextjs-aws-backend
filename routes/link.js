@@ -24,6 +24,8 @@ const {
   update,
   remove,
   clickCount,
+  getPopularLinks,
+  getPopularLinksInCategory,
 } = require("../controllers/link");
 
 // routes
@@ -36,10 +38,19 @@ router.post(
   create
 );
 
+//@get all links
 router.get("/links", requireSignin, isAdmin, list);
 
+//@get link click count
 router.put("/click-count", clickCount);
 
+//@get most popular links
+router.get("/links/popular/", getPopularLinks);
+
+//@get most popular links in category
+router.get("/links/popular/:category", getPopularLinksInCategory);
+
+//@read single link
 router.get("/link/:id", read);
 
 //@user can update their own link only
